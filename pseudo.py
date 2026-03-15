@@ -1,9 +1,8 @@
 import argparse
 
 from langchain.agents import create_agent
-from langchain_core.messages import AIMessage, AIMessageChunk, AnyMessage, HumanMessage, ToolMessage
+from langchain_core.messages import AIMessage, AIMessageChunk, AnyMessage, SystemMessage, ToolMessage
 from langchain_core.tools import tool
-from langchain_ollama import ChatOllama
 from langchain.chat_models import init_chat_model
 from dotenv import load_dotenv
 from langgraph.prebuilt.tool_node import ToolRuntime
@@ -52,23 +51,29 @@ if __name__ == "__main__":
     )
 
     parser.add_argument("filename", type=str, help="The filename to run")
+    parser.add_argument(
+        "--model", "-m",
+        type=str,
+        default="gpt-5.1-codex-mini",
+        help="Chat model to use (default: gpt-5.1-codex-mini)",
+    )
 
     args = parser.parse_args()
     
     child = pexpect.spawn(f'python3 -m pdb {args.filename}', encoding='utf-8')
 
-    model = init_chat_model("gpt-5.1-codex-mini")
+    model = init_chat_model(args.model)
 
     agent = create_agent(
         model=model,
         tools=[send_pdb_command],
         context_schema=CLIContext,
-        system_prompt="You are a Python debugger assistant that steps through Python code and returns information about the program",
+        system_prompt=SystemMessage(content=open("system_prompt.md").read()),
         middleware=[ToolCallLimitMiddleware(run_limit=10)]
     )
 
     for chunk in agent.stream(
-        {"messages": [{"role": "user", "content": "You have been given access to a PDB session and are able to call the send_pdb_command tool to step through the code that is being debugged. Step through the code line by line and analyze the program at each step. Return a summary of what you found during the debugging. If the number of steps exceeds 5, continue the program and return."}]},
+        {"messages": [{"role": "user", "content": "Step through the code line by line and analyze the program at each step. Return a summary of what you found during the debugging. If the number of steps exceeds 5, continue the program and return."}]},
         context=CLIContext(child=child),
         stream_mode=["messages", "updates"],
         version="v2",
