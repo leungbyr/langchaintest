@@ -22,7 +22,7 @@ def send_pdb_command(command: str, runtime: ToolRuntime[CLIContext]) -> str:
 
 def _render_message_chunk(token: AIMessageChunk) -> None:
     if token.text:
-        print(token.text, end="|")
+        print(token.text, end="")
     if token.tool_call_chunks:
         print(token.tool_call_chunks)
     # N.B. all content is available through token.content_blocks
@@ -72,8 +72,10 @@ if __name__ == "__main__":
         middleware=[ToolCallLimitMiddleware(run_limit=10)]
     )
 
+    code = open(args.filename).read()
+
     for chunk in agent.stream(
-        {"messages": [{"role": "user", "content": "Step through the code line by line and analyze the program at each step. Return a summary of what you found during the debugging. If the number of steps exceeds 5, continue the program and return."}]},
+        {"messages": [{"role": "user", "content": f"The code you are debugging is as follows: {code}."}]},
         context=CLIContext(child=child),
         stream_mode=["messages", "updates"],
         version="v2",
