@@ -1,20 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { render, Text } from "ink";
+import TextInput from 'ink-text-input';
 
-const Counter = () => {
-    const [counter, setCounter] = useState(0);
+const Main = () => {
+    const [input, setInput] = useState('');
 
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCounter((previousCounter) => previousCounter + 1);
-        }, 100);
+    const handleSubmit = (value: string) => {
+        setInput('')
+    };
 
-        return () => {
-            clearInterval(timer);
-        };
-    }, []);
-
-    return <Text color="green">{counter} tests passed</Text>;
+    return (
+        <>
+            <Text color="green">Hello, welcome to Byron Code</Text>
+            <Text>What code would you like to debug?</Text>
+            <TextInput value={input} onChange={setInput} onSubmit={handleSubmit}/>
+        </>
+    );
 };
 
-render(<Counter />);
+render(<Main />);
